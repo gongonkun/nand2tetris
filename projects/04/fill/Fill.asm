@@ -53,7 +53,7 @@ M=D
   D=M
   @max_size
   D=D-M
-  @WIHTE
-  D;JEQ
+  @WHITE
+  D;JNE
   @INPUT
   0;JMP
