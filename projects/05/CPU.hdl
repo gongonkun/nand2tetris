@@ -39,5 +39,57 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+    Not(in=instruction[15], out=isAInsturction);
+    // n < 0 の場合にjmpさせる制御ビット
+    And(a=instruction[0], b=instruction[15], out=j3);
+    // n = 0 の場合にjmpさせる制御ビット
+    And(a=instruction[1], b=instruction[15], out=j2);
+    // n > 0 の場合にjmpさせる制御ビット
+    And(a=instruction[2], b=instruction[15], out=j1);
+    //RAM[A]に書き込むかどうかの制御ビット
+    And(a=instruction[3], b=instruction[15], out=writeM);
+    //Dレジスタに, 出力された値を格納するかどうかの制御ビット
+    And(a=instruction[4], b=instruction[15], out=writeDRegister);
+    // Aレジスタに, 出力された値を格納するかどうかの制御ビット
+    Or(a=isAInsturction, b=instruction[5], out=writeARegister);
+
+    Mux16(a=outALU, b[0..14]=instruction[0..14], b[15]=false, sel=isAInsturction, out=instOroutALU);
+    //Aレジスタ
+    ARegister(in=instOroutALU, load=writeARegister, out=aRegister16, out[0..14]=addressM);
+    // Dレジスタ 
+    DRegister(in=outALU, load=writeDRegister, out=dRegister);
+
+    Mux16(a=aRegister16, b=inM, sel=instruction[12], out=aOrM);
+
+    ALU(x=dRegister, y=aOrM, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=outM, out=outALU, zr=outEquals0, ng=outLessThan0);
+    
+    Or(a=outEquals0, b=outLessThan0, out=outLessThanEquals0); // out <= 0
+    Not(in=outLessThanEquals0, out=outGreaterThan0); // out > 0 
+    Or(a=outGreaterThan0, b=outEquals0, out=outGreaterThanEquals0); // out >= 0
+    Or(a=outLessThan0, b=outGreaterThan0, out=outNotEquals0); // out != 0
+
+    // ジャンプ
+    DMux8Way(in=true, sel[0]=j3,sel[1]=j2, sel[2]=j1, a=null, b=jgt, c=jeq, d=jge, e=jlt, f=jne, g=jle, h=jmpScore);
+    
+    And(a=null, b=false, out=nullScore);
+
+    And(a=jgt, b=outGreaterThan0, out=jgtScore);
+
+    And(a=jeq, b=outEquals0, out=jeqScore);
+
+    And(a=jge, b=outGreaterThanEquals0, out=jgeScore);
+
+    And(a=jlt, b=outLessThan0, out=jltScore);
+
+    And(a=jne, b=outNotEquals0, out=jneScore);
+
+    And(a=jle, b=outLessThanEquals0, out=jleScore);
+
+    Or8Way(in[0]=nullScore, in[1]=jgtScore, in[2]=jeqScore, in[3]=jgeScore, in[4]=jltScore, in[5]=jneScore, in[6]=jleScore, in[7]=jmpScore, out=jump);
+
+    Or(a=jump, b=reset, out=jumpOrReset);
+    Not(in=jumpOrReset, out=increment);
+
+    // PC
+    PC(in=aRegister16, load=jump, inc=increment, reset=reset, out[0..14]=pc);
 }
