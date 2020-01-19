@@ -44,9 +44,11 @@ class Parser(val inputFile: File) {
     this.currentCommand = tmpCommand.trim()
   }
 
+  /**
+   * ex: push constant 1 -> constant
+   *     add             -> add
+   */
   fun arg1(): String {
-    // ex) add
-    //     push constant 1
     return when(this.commandType()) {
       COMMAND_TYPE.C_ARITHMETIC -> currentCommand
       COMMAND_TYPE.C_PUSH -> currentCommand.split(" ")[1]
@@ -54,6 +56,9 @@ class Parser(val inputFile: File) {
     }
   }
 
+  /**
+   * ex: push constant 1 -> 1
+   */
   fun arg2(): Int {
     return when(this.commandType()) {
       COMMAND_TYPE.C_PUSH -> Integer.parseInt(currentCommand.split(" ")[2])
