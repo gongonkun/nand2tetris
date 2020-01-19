@@ -7,11 +7,13 @@ import java.io.PrintWriter
 class CodeWriter(outputFile: FileWriter) {
   private val pw = PrintWriter(BufferedWriter(outputFile))
   private val DEFAULT_STACK_POINTER = 256
+
   /*
    * 比較演算用の条件分岐のラベルを一意に設定する為の変数
    * eq, gt, lt が呼ばれる度にインクリメントされる
    */
   private var comparisonLabelIdentifier = 0
+
 
   fun setFileName(fileName: String) {
     // 新しいVMファイルの変換がスタートされた
@@ -37,26 +39,76 @@ class CodeWriter(outputFile: FileWriter) {
     }
   }
 
-  fun writePushPop(command: String, segment: String, index: Int) {
-    // push pop命令をアセンブリコードに変換し、書き込む
-    // 一旦以下の場合のみを考える
-    // push constant 8
+  fun writePush(segment: String, index: Int) {
     if(segment == "constant") {
       pw.println("@${index}")
       pw.println("D=A")
       referenceToStack()
       pw.println("M=D")
+      incrementStackPointer()
+      return
     }
 
-    if(command == "push") {
-      incrementStackPointer()
+    val label = convertToLabelBy(segment)
+
+    when(segment) {
+      "local","argument", "this", "that" -> {
+        pw.println("@$label")
+        pw.println("D=M")
+        pw.println("@${index}")
+        pw.println("A=D+A")
+        pw.println("D=M")
+        referenceToStack()
+        pw.println("M=D")
+        incrementStackPointer()
+      }
+
+      "pointer", "temp" -> {
+
+      }
+
+      "static" -> {
+
+      }
+
+      else -> throw RuntimeException("不正なセグメントです segment = $segment")
+    }
+  }
+
+  fun writePop(segment: String, index: Int) {
+    val label = convertToLabelBy(segment)
+
+    when(segment) {
+      "local","argument", "this", "that" -> {
+        pw.println("@$label")
+        pw.println("D=M")
+        pw.println("@${index}")
+        pw.println("D=D+A")
+        pw.println("@R13")
+        pw.println("M=D")
+        popFromStack()
+        pw.println("D=M")
+        pw.println("@R13")
+        pw.println("A=M")
+        pw.println("M=D")
+      }
+
+      "pointer", "temp" -> {
+
+      }
+
+      "static" -> {
+
+      }
+
+      else -> throw RuntimeException("不正なセグメントです segment = $segment")
     }
   }
 
   fun close() {
     // 出力ファイルを閉じる
-    pw.println("(END)") // TODO: プログラムの総行数(メモリポインタの値)を取得し無限ループさせたい
-    pw.println("@END")
+    pw.println("(PROGRAM_END)")
+    pw.println("@PROGRAM_END")
     pw.println("0;JMP")
     pw.close()
   }
@@ -80,7 +132,7 @@ class CodeWriter(outputFile: FileWriter) {
   }
 
   private fun assemblerCodeOfNeg() {
-    // - y
+    // - x
     popFromStack()
     pw.println("M=-M")
     incrementStackPointer()
@@ -89,17 +141,17 @@ class CodeWriter(outputFile: FileWriter) {
 
   private fun assemblerCodeOfEq() {
     // x == y
-    assemblerCodeOfComparisonBy("eq")
+    assemblerCodeOfComparisonBy(command = "eq")
   }
 
   private fun assemblerCodeOfGt() {
     // x > y
-    assemblerCodeOfComparisonBy("gt")
+    assemblerCodeOfComparisonBy(command = "gt")
   }
 
   private fun assemblerCodeOfLt() {
     // x < y
-    assemblerCodeOfComparisonBy("lt")
+    assemblerCodeOfComparisonBy(command = "lt")
   }
 
   private fun assemblerCodeOfAnd() {
@@ -183,7 +235,16 @@ class CodeWriter(outputFile: FileWriter) {
     pw.println("@SP")
     pw.println("M=M-1")
   }
+
+  private fun convertToLabelBy(segment: String): String {
+    return when(segment) {
+      "local" -> "LCL"
+      "argument" -> "ARG"
+      "this" -> "THIS"
+      "that" -> "THAT"
+      "pointer" -> "3"
+      "temp" -> "5"
+      else -> throw RuntimeException("不正なセグメント segment = $segment")
+    }
+  }
 }
-
-
-

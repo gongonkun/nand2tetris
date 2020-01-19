@@ -15,7 +15,8 @@ object VMTranslator {
 
       when(parser.commandType()) {
         Parser.COMMAND_TYPE.C_ARITHMETIC -> codeWriter.writeArithmetic(parser.arg1())
-        Parser.COMMAND_TYPE.C_PUSH -> codeWriter.writePushPop("push", parser.arg1(), parser.arg2())
+        Parser.COMMAND_TYPE.C_PUSH -> codeWriter.writePush(parser.arg1(), parser.arg2())
+        Parser.COMMAND_TYPE.C_POP -> codeWriter.writePop(parser.arg1(), parser.arg2())
       }
     }
 
