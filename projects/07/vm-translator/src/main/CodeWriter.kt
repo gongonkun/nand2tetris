@@ -40,6 +40,7 @@ class CodeWriter(outputFile: FileWriter) {
   }
 
   fun writePush(segment: String, index: Int) {
+    // constantの場合はstackにindexで渡されたものを入れるだけ
     if(segment == "constant") {
       pw.println("@${index}")
       pw.println("D=A")
@@ -63,13 +64,18 @@ class CodeWriter(outputFile: FileWriter) {
         incrementStackPointer()
       }
 
-      "pointer", "temp" -> {
-
+      "temp", "pointer" -> {
+        pw.println("@$label")
+        pw.println("D=A")
+        pw.println("@${index}")
+        pw.println("A=D+A")
+        pw.println("D=M")
+        referenceToStack()
+        pw.println("M=D")
+        incrementStackPointer()
       }
 
-      "static" -> {
-
-      }
+      "static" -> { }
 
       else -> throw RuntimeException("不正なセグメントです segment = $segment")
     }
@@ -93,13 +99,21 @@ class CodeWriter(outputFile: FileWriter) {
         pw.println("M=D")
       }
 
-      "pointer", "temp" -> {
-
+      "temp", "pointer" -> {
+        pw.println("@$label")
+        pw.println("D=A") // 5
+        pw.println("@$index")
+        pw.println("D=D+A") // 5 + 6
+        pw.println("@R13")
+        pw.println("M=D")
+        popFromStack()
+        pw.println("D=M")
+        pw.println("@R13")
+        pw.println("A=M")
+        pw.println("M=D")
       }
 
-      "static" -> {
-
-      }
+      "static" -> { }
 
       else -> throw RuntimeException("不正なセグメントです segment = $segment")
     }
@@ -242,8 +256,8 @@ class CodeWriter(outputFile: FileWriter) {
       "argument" -> "ARG"
       "this" -> "THIS"
       "that" -> "THAT"
-      "pointer" -> "3"
-      "temp" -> "5"
+      "pointer" -> "R3"
+      "temp" -> "R5"
       else -> throw RuntimeException("不正なセグメント segment = $segment")
     }
   }

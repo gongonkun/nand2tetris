@@ -51,17 +51,18 @@ class Parser(val inputFile: File) {
   fun arg1(): String {
     return when(this.commandType()) {
       COMMAND_TYPE.C_ARITHMETIC -> currentCommand
-      COMMAND_TYPE.C_PUSH -> currentCommand.split(" ")[1]
-      else -> throw RuntimeException()
+      COMMAND_TYPE.C_PUSH, COMMAND_TYPE.C_POP -> currentCommand.split(" ")[1]
+      else -> throw RuntimeException("不正なcommand typeです. currentCommand = ${this.currentCommand}")
     }
   }
 
   /**
    * ex: push constant 1 -> 1
+   * push, pop, function 以外は error
    */
   fun arg2(): Int {
     return when(this.commandType()) {
-      COMMAND_TYPE.C_PUSH -> Integer.parseInt(currentCommand.split(" ")[2])
+      COMMAND_TYPE.C_PUSH, COMMAND_TYPE.C_POP -> Integer.parseInt(currentCommand.split(" ")[2])
       else -> throw RuntimeException("不正なcommand typeです. currentCommand = ${this.currentCommand}")
     }
   }
@@ -72,6 +73,7 @@ class Parser(val inputFile: File) {
     return when {
       arithmeticCommands.contains(command) -> COMMAND_TYPE.C_ARITHMETIC
       command == "push" -> COMMAND_TYPE.C_PUSH
+      command == "pop" -> COMMAND_TYPE.C_POP
       else -> throw RuntimeException("不正なcommandTypeです. currentCommand = ${this.currentCommand}")
     }
   }
