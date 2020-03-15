@@ -7,20 +7,18 @@ import java.io.PrintWriter
 class CodeWriter(outputFile: FileWriter) {
   private val pw = PrintWriter(BufferedWriter(outputFile))
   private val DEFAULT_STACK_POINTER = 256
-
+  private var fileName = ""
   /*
    * 比較演算用の条件分岐のラベルを一意に設定する為の変数
    * eq, gt, lt が呼ばれる度にインクリメントされる
    */
   private var comparisonLabelIdentifier = 0
 
-
+  /**
+   * ex: arg = /Hoge/Foo/Bar.vm => this.fileName = Bar
+   */
   fun setFileName(fileName: String) {
-    // 新しいVMファイルの変換がスタートされた
-    pw.println("@${DEFAULT_STACK_POINTER}")
-    pw.println("D=A")
-    pw.println("@SP")
-    pw.println("M=D")
+    this.fileName = fileName.substringAfterLast('/').substringBeforeLast('.')
   }
 
   fun writeArithmetic(command: String) {
@@ -34,7 +32,7 @@ class CodeWriter(outputFile: FileWriter) {
       "lt" -> assemblerCodeOfLt()
       "and" -> assemblerCodeOfAnd()
       "or" -> assemblerCodeOfOr()
-      "not" -> assemblerCodeOfNot()
+      "not" -> assemblerCodeOfNot ()
       else -> throw RuntimeException("予期しない算術コマンド command = $command")
     }
   }
@@ -75,7 +73,13 @@ class CodeWriter(outputFile: FileWriter) {
         incrementStackPointer()
       }
 
-      "static" -> { }
+      "static" -> {
+        pw.println("@$label.$index")
+        pw.println("D=M")
+        referenceToStack()
+        pw.println("M=D")
+        incrementStackPointer()
+      }
 
       else -> throw RuntimeException("不正なセグメントです segment = $segment")
     }
@@ -113,7 +117,12 @@ class CodeWriter(outputFile: FileWriter) {
         pw.println("M=D")
       }
 
-      "static" -> { }
+      "static" -> {
+        popFromStack()
+        pw.println("D=M")
+        pw.println("@$label.$index")
+        pw.println("M=D")
+      }
 
       else -> throw RuntimeException("不正なセグメントです segment = $segment")
     }
@@ -258,6 +267,7 @@ class CodeWriter(outputFile: FileWriter) {
       "that" -> "THAT"
       "pointer" -> "R3"
       "temp" -> "R5"
+      "static" -> this.fileName
       else -> throw RuntimeException("不正なセグメント segment = $segment")
     }
   }
