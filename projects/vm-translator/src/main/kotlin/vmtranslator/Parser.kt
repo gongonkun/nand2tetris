@@ -1,4 +1,4 @@
-package main
+package vmtranslator
 
 import java.io.File
 
@@ -74,6 +74,11 @@ class Parser(val inputFile: File) {
       arithmeticCommands.contains(command) -> COMMAND_TYPE.C_ARITHMETIC
       command == "push" -> COMMAND_TYPE.C_PUSH
       command == "pop" -> COMMAND_TYPE.C_POP
+      command == "label" -> COMMAND_TYPE.C_LABEL
+      command == "goto" -> COMMAND_TYPE.C_GOTO
+      command == "label" -> COMMAND_TYPE.C_IF
+      command == "label" -> COMMAND_TYPE.C_RETURN
+      command == "call" -> COMMAND_TYPE.C_CALL
       else -> throw RuntimeException("不正なcommandTypeです. currentCommand = ${this.currentCommand}")
     }
   }

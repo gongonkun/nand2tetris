@@ -1,4 +1,4 @@
-package main
+package vmtranslator
 
 import java.io.BufferedWriter
 import java.io.FileWriter
@@ -127,6 +127,15 @@ class CodeWriter(outputFile: FileWriter) {
       else -> throw RuntimeException("不正なセグメントです segment = $segment")
     }
   }
+
+  fun writeLabel(label: String) {}
+
+  fun writeGoto(label: String) {}
+
+  fun writeIf(label: String) {}
+
+  fun writeCall(functionName: String, numArgs: Int) {}
+
 
   fun close() {
     // 出力ファイルを閉じる

@@ -1,9 +1,9 @@
-package main
+package vmtranslator
 
 import java.io.File
 import java.io.FileWriter
 
-object VMTranslator {
+class App {
   fun translate(vmFilePath: String) {
     val parser = Parser(File(vmFilePath))
     val codeWriter = CodeWriter(FileWriter(File(assemblerFileName(vmFilePath))))
@@ -29,5 +29,5 @@ object VMTranslator {
 }
 
 fun main(args: Array<String>) {
-  VMTranslator.translate(args[0])
+  App().translate(args[0])
 }
