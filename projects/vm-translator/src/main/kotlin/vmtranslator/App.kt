@@ -23,9 +23,7 @@ class App {
     codeWriter.close()
   }
 
-  fun assemblerFileName(vmFile: String): String {
-    return vmFile.replace("\\.vm".toRegex(), ".asm")
-  }
+  private fun assemblerFileName(vmFile: String): String = vmFile.replace("\\.vm".toRegex(), ".asm")
 }
 
 fun main(args: Array<String>) {

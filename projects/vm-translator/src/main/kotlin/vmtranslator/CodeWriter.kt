@@ -14,6 +14,8 @@ class CodeWriter(outputFile: FileWriter) {
    */
   private var comparisonLabelIdentifier = 0
 
+  private var prefixVmLabel = "VMLABEL_"
+
   /**
    * ex: arg = /Hoge/Foo/Bar.vm => this.fileName = Bar
    */
@@ -128,7 +130,9 @@ class CodeWriter(outputFile: FileWriter) {
     }
   }
 
-  fun writeLabel(label: String) {}
+  fun writeLabel(label: String) {
+    pw.println("(${prefixVmLabel + label})")
+  }
 
   fun writeGoto(label: String) {}
 
@@ -168,7 +172,6 @@ class CodeWriter(outputFile: FileWriter) {
     popFromStack()
     pw.println("M=-M")
     incrementStackPointer()
-
   }
 
   private fun assemblerCodeOfEq() {
