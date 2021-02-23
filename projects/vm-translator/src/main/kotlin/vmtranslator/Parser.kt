@@ -51,7 +51,7 @@ class Parser(val inputFile: File) {
   fun arg1(): String {
     return when(this.commandType()) {
       COMMAND_TYPE.C_ARITHMETIC -> currentCommand
-      COMMAND_TYPE.C_PUSH, COMMAND_TYPE.C_POP -> currentCommand.split(" ")[1]
+      COMMAND_TYPE.C_PUSH, COMMAND_TYPE.C_POP, COMMAND_TYPE.C_LABEL, COMMAND_TYPE.C_GOTO, COMMAND_TYPE.C_IF -> currentCommand.split(" ")[1]
       else -> throw RuntimeException("不正なcommand typeです. currentCommand = ${this.currentCommand}")
     }
   }
@@ -76,8 +76,8 @@ class Parser(val inputFile: File) {
       command == "pop" -> COMMAND_TYPE.C_POP
       command == "label" -> COMMAND_TYPE.C_LABEL
       command == "goto" -> COMMAND_TYPE.C_GOTO
-      command == "label" -> COMMAND_TYPE.C_IF
-      command == "label" -> COMMAND_TYPE.C_RETURN
+      command == "if-goto" -> COMMAND_TYPE.C_IF
+      command == "return" -> COMMAND_TYPE.C_RETURN
       command == "call" -> COMMAND_TYPE.C_CALL
       else -> throw RuntimeException("不正なcommandTypeです. currentCommand = ${this.currentCommand}")
     }

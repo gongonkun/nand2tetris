@@ -134,9 +134,17 @@ class CodeWriter(outputFile: FileWriter) {
     pw.println("(${prefixVmLabel + label})")
   }
 
-  fun writeGoto(label: String) {}
+  fun writeGoto(label: String) {
+      pw.println("@${prefixVmLabel + label}")
+      pw.println("0;JMP")
+  }
 
-  fun writeIf(label: String) {}
+  fun writeIf(label: String) {
+    popFromStack();
+    pw.println("D=M");
+    pw.println("@${prefixVmLabel + label}")
+    pw.println("D;JNE")
+  }
 
   fun writeCall(functionName: String, numArgs: Int) {}
 
