@@ -146,7 +146,9 @@ class CodeWriter(outputFile: FileWriter) {
     pw.println("D;JNE")
   }
 
-  fun writeCall(functionName: String, numArgs: Int) {}
+  fun writeCall(functionName: String, numArgs: Int) {
+
+  }
 
 
   fun close() {
