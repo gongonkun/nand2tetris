@@ -13,6 +13,7 @@ class CodeWriter(outputFile: FileWriter) {
    * eq, gt, lt が呼ばれる度にインクリメントされる
    */
   private var comparisonLabelIdentifier = 0
+  private var returnLabelIdentifier = 0
 
   private var prefixVmLabel = "VMLABEL_"
 
@@ -20,7 +21,16 @@ class CodeWriter(outputFile: FileWriter) {
    * ex: arg = /Hoge/Foo/Bar.vm => this.fileName = Bar
    */
   fun setFileName(fileName: String) {
-    this.fileName = fileName.substringAfterLast('/').substringBeforeLast('.')
+    this.fileName = fileName.substringBeforeLast('.')
+  }
+
+  fun writeBootstrap() {
+    pw.println("@${DEFAULT_STACK_POINTER}")
+    pw.println("D=A")
+    pw.println("@SP")
+    pw.println("M=D")
+
+    writeCall("Sys.init", 0)
   }
 
   fun writeArithmetic(command: String) {
@@ -146,16 +156,121 @@ class CodeWriter(outputFile: FileWriter) {
     pw.println("D;JNE")
   }
 
-  fun writeCall(functionName: String, numArgs: Int) {
+  fun writeFunction(functionName: String, numLocals: Int) {
+    writeLabel(functionName)
+    repeat(numLocals) {
+      writePush("constant", 0)
+    }
+  }
 
+  fun writeCall(functionName: String, numArgs: Int) {
+    val returnAddress = "RETURN_LABEL_${returnLabelIdentifier++}"
+    // push return address
+    pw.println("@${returnAddress}")
+    pw.println("D=A")
+    referenceToStack()
+    pw.println("M=D")
+    incrementStackPointer()
+    // push current lcl
+    pw.println("@LCL")
+    pw.println("D=M")
+    referenceToStack()
+    pw.println("M=D")
+    incrementStackPointer()
+    // push current arg
+    pw.println("@ARG")
+    pw.println("D=M")
+    referenceToStack()
+    pw.println("M=D")
+    incrementStackPointer()
+    // push current this
+    pw.println("@THIS")
+    pw.println("D=M")
+    referenceToStack()
+    pw.println("M=D")
+    incrementStackPointer()
+    // push current that
+    pw.println("@THAT")
+    pw.println("D=M")
+    referenceToStack()
+    pw.println("M=D")
+    incrementStackPointer()
+    // change arg
+    pw.println("@${numArgs + 5}")
+    pw.println("D=A")
+    pw.println("@SP")
+    pw.println("D=M-D")
+    pw.println("@ARG")
+    pw.println("M=D")
+    // change lcl
+    pw.println("@SP")
+    pw.println("D=M")
+    pw.println("@LCL")
+    pw.println("M=D")
+
+    writeGoto(functionName)
+    pw.println("(${returnAddress})")
+  }
+
+  fun writeReturn() {
+    pw.println("@LCL")
+    pw.println("D=M")
+    pw.println("@5")
+    pw.println("A=D-A")
+    pw.println("D=M")
+    pw.println("@R14")
+    pw.println("M=D")
+
+    popFromStack()
+    pw.println("D=M")
+    pw.println("@ARG")
+    pw.println("A=M")
+    pw.println("M=D")
+
+    pw.println("@ARG")
+    pw.println("D=M")
+    pw.println("@SP")
+    pw.println("M=D+1")
+
+    pw.println("@LCL")
+    pw.println("D=M")
+    pw.println("A=D-1")
+    pw.println("D=M")
+    pw.println("@THAT")
+    pw.println("M=D")
+
+    pw.println("@LCL")
+    pw.println("D=M")
+    pw.println("@2")
+    pw.println("A=D-A")
+    pw.println("D=M")
+    pw.println("@THIS")
+    pw.println("M=D")
+
+    pw.println("@LCL")
+    pw.println("D=M")
+    pw.println("@3")
+    pw.println("A=D-A")
+    pw.println("D=M")
+    pw.println("@ARG")
+    pw.println("M=D")
+
+    pw.println("@LCL")
+    pw.println("D=M")
+    pw.println("@4")
+    pw.println("A=D-A")
+    pw.println("D=M")
+    pw.println("@LCL")
+    pw.println("M=D")
+
+    pw.println("@R14")
+    pw.println("A=M")
+    pw.println("0;JMP")
   }
 
 
   fun close() {
     // 出力ファイルを閉じる
-    pw.println("(PROGRAM_END)")
-    pw.println("@PROGRAM_END")
-    pw.println("0;JMP")
     pw.close()
   }
 

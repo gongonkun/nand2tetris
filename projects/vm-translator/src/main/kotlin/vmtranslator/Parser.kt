@@ -11,8 +11,9 @@ class Parser(val inputFile: File) {
     C_LABEL,
     C_GOTO,
     C_IF,
+    C_FUNCTION,
+    C_CALL,
     C_RETURN,
-    C_CALL
   }
 
   private val inputLines = inputFile.readLines()
@@ -50,8 +51,14 @@ class Parser(val inputFile: File) {
    */
   fun arg1(): String {
     return when(this.commandType()) {
-      COMMAND_TYPE.C_ARITHMETIC -> currentCommand
-      COMMAND_TYPE.C_PUSH, COMMAND_TYPE.C_POP, COMMAND_TYPE.C_LABEL, COMMAND_TYPE.C_GOTO, COMMAND_TYPE.C_IF -> currentCommand.split(" ")[1]
+      COMMAND_TYPE.C_ARITHMETIC, COMMAND_TYPE.C_RETURN -> currentCommand
+      COMMAND_TYPE.C_PUSH,
+      COMMAND_TYPE.C_POP,
+      COMMAND_TYPE.C_LABEL,
+      COMMAND_TYPE.C_GOTO,
+      COMMAND_TYPE.C_IF,
+      COMMAND_TYPE.C_FUNCTION,
+      COMMAND_TYPE.C_CALL -> currentCommand.split(" ")[1]
       else -> throw RuntimeException("不正なcommand typeです. currentCommand = ${this.currentCommand}")
     }
   }
@@ -62,7 +69,7 @@ class Parser(val inputFile: File) {
    */
   fun arg2(): Int {
     return when(this.commandType()) {
-      COMMAND_TYPE.C_PUSH, COMMAND_TYPE.C_POP -> Integer.parseInt(currentCommand.split(" ")[2])
+      COMMAND_TYPE.C_PUSH, COMMAND_TYPE.C_POP, COMMAND_TYPE.C_FUNCTION, COMMAND_TYPE.C_CALL -> Integer.parseInt(currentCommand.split(" ")[2])
       else -> throw RuntimeException("不正なcommand typeです. currentCommand = ${this.currentCommand}")
     }
   }
@@ -77,6 +84,7 @@ class Parser(val inputFile: File) {
       command == "label" -> COMMAND_TYPE.C_LABEL
       command == "goto" -> COMMAND_TYPE.C_GOTO
       command == "if-goto" -> COMMAND_TYPE.C_IF
+      command == "function" -> COMMAND_TYPE.C_FUNCTION
       command == "return" -> COMMAND_TYPE.C_RETURN
       command == "call" -> COMMAND_TYPE.C_CALL
       else -> throw RuntimeException("不正なcommandTypeです. currentCommand = ${this.currentCommand}")

@@ -8,10 +8,11 @@ class App {
   fun translate(vmFilePath: String) {
     val vmFiles = readVmFiles(vmFilePath) ?: return
 
-    val codeWriter = CodeWriter(FileWriter(File(assemblerFileName(vmFilePath))))
+    val codeWriter = CodeWriter(FileWriter(outputFile(vmFilePath)))
     vmFiles.forEach {
       val parser = Parser(it)
-      codeWriter.setFileName(it.path)
+      codeWriter.setFileName(it.name)
+      codeWriter.writeBootstrap()
 
       while(parser.hasMoreCommands()) {
         parser.advance()
@@ -21,6 +22,9 @@ class App {
           Parser.COMMAND_TYPE.C_LABEL -> codeWriter.writeLabel(parser.arg1())
           Parser.COMMAND_TYPE.C_GOTO -> codeWriter.writeGoto(parser.arg1())
           Parser.COMMAND_TYPE.C_IF -> codeWriter.writeIf(parser.arg1())
+          Parser.COMMAND_TYPE.C_FUNCTION -> codeWriter.writeFunction(parser.arg1(), parser.arg2())
+          Parser.COMMAND_TYPE.C_CALL -> codeWriter.writeCall(parser.arg1(), parser.arg2())
+          Parser.COMMAND_TYPE.C_RETURN -> codeWriter.writeReturn()
           Parser.COMMAND_TYPE.C_PUSH -> codeWriter.writePush(parser.arg1(), parser.arg2())
           Parser.COMMAND_TYPE.C_POP -> codeWriter.writePop(parser.arg1(), parser.arg2())
         }
@@ -30,7 +34,14 @@ class App {
     codeWriter.close()
   }
 
-  private fun assemblerFileName(vmFile: String): String = vmFile.replace("\\.vm".toRegex(), ".asm")
+  private fun outputFile(vmFilePath: String): File {
+    val file = File(vmFilePath)
+    return if (file.isDirectory) {
+      File(vmFilePath + "/${file.name}.asm")
+    } else {
+      File(vmFilePath.replace("\\.vm".toRegex(), "") + ".asm")
+    }
+  }
 
   private fun readVmFiles(path: String): Array<File>? {
     class VmFileFilter: FilenameFilter {
@@ -40,9 +51,10 @@ class App {
     val file = File(path)
 
     return if (file.isDirectory) {
-      arrayOf(File(path))
-    } else {
+
       File(path).listFiles(VmFileFilter())
+    } else {
+      arrayOf(File(path))
     }
   }
 }
